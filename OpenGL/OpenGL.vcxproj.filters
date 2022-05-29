@@ -18,15 +18,21 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\NBodySeq.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\File.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="h\NBodySim.h">
+    <ClInclude Include="h\NBodySeq.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="h\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Params.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

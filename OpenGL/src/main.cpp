@@ -7,11 +7,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "NBodySim.h"
-
-using namespace std;
+#include <chrono>
+#include "NBodySeq.h"
+#include "Params.h"
 
 #define STRINGIFY(X) #X
+
 
 // Shader sources
 const GLchar* vertexSource =
@@ -43,7 +44,7 @@ const GLchar* fragmentSource =
 "    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);"
 "}";
 
-static unsigned int CompileShader(unsigned int type, const string& source)
+static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
     unsigned int id = glCreateShader(type);
     const char* src = source.c_str();
@@ -58,15 +59,15 @@ static unsigned int CompileShader(unsigned int type, const string& source)
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char* mess = (char*)alloca(length * sizeof(char));
         glGetShaderInfoLog(id, length, &length, mess);
-        cout << "Failed to compile shader: " << id << " - " << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << endl;
-        cout << mess << endl;
+        std::cout << "Failed to compile shader: " << id << " - " << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << std::endl;
+        std::cout << mess << std::endl;
         glDeleteShader(id);
         return 0;
     }
     return id;
 }
 
-static unsigned int createShader(const string& vertexShader, const string& fragmentShader)
+static unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader)
 {
     unsigned int program = glCreateProgram();
     unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
@@ -124,16 +125,14 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
     {
-        cout << "Klik!" << endl;
+        std::cout << "Klik!" << std::endl;
         // CREATE PARTICLE
     }
 }
 
 void displayFPS(int frameCount) {
-    cout << "\r" << "FPS: " << frameCount;
+    std::cout << "\r" << "FPS: " << frameCount;
 }
-
-const int numParticles = 100;
 
 int main(void)
 {
@@ -144,7 +143,7 @@ int main(void)
         return -1;
     
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1240, 760, "NBodySim", NULL, NULL);
+    window = glfwCreateWindow(900, 900, "NBodySim", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -163,9 +162,8 @@ int main(void)
 
     fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
     fprintf(stdout, "Status: Using OPENGL %s\n", glGetString(GL_VERSION));
-
    
-    NBodySim simulation(numParticles);
+    NBodySeq simulation(NUM_PARTICLES);
     
     unsigned int shader = createShader(vertexSource, fragmentSource);
     glUseProgram(shader);
@@ -216,7 +214,7 @@ int main(void)
 
     displayDeviceProperties();
     
-    glfwSetMouseButtonCallback(window, mouseCallback);
+    //glfwSetMouseButtonCallback(window, mouseCallback);
 
     int cnt = 0;
     double previousTime = glfwGetTime();
@@ -224,67 +222,46 @@ int main(void)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        //glClear(GL_COLOR_BUFFER_BIT);
-
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        
-        /* Swap front and back buffers */
-        //glfwSwapBuffers(window);
         // Measure speed
         double currentTime = glfwGetTime();
         frameCount++;
         // If a second has passed.
-        if (currentTime - previousTime >= 0.1)
+        if (currentTime - previousTime >= 1)
         {
             // Display the frame count here any way you want.
-            displayFPS(frameCount*10);
+            //displayFPS(frameCount);
 
             frameCount = 0;
             previousTime = currentTime;
         }
-        /* Poll for and process events */
-        //glfwPollEvents();
 
-        glBufferData(GL_ARRAY_BUFFER, 2 * numParticles * sizeof(float), vertices, GL_DYNAMIC_DRAW); //copy data to active buffer 
+        glBufferData(GL_ARRAY_BUFFER, 2 * NUM_PARTICLES * sizeof(float), vertices, GL_DYNAMIC_DRAW); //copy data to active buffer 
 
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw points
-        glDrawArrays(GL_POINTS, 0, numParticles);
+        glDrawArrays(GL_POINTS, 0, NUM_PARTICLES);
 
-        // Swap buffers
-        //window->display();
-
-        GLfloat lineVertices[] = {
-            10, 10,
-            20, 20
-        };
-
-        if (++cnt % 2 == 0)
+        if (!DISPLAY_TIMES || ++cnt % 200 == 0)
         {
-            simulation.run();
+            auto start = std::chrono::high_resolution_clock::now();
+
+            if(BRUTEFORCE) simulation.runBruteForce();
+            else simulation.runBarnesHut();
+
+            if (DISPLAY_TIMES) {
+                auto stop = std::chrono::high_resolution_clock::now();
+
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+                std::cout << "Time for 1 iteration:" << duration.count() / 1000 << " milliseconds " << std::endl;
+                std::cout << "NumCalcs: " << simulation.numCalcs << std::endl;
+            }
             cnt = 0;
         }
 
-        simulation.tree.displayLines();
-        
-        /*glBegin(GL_LINES);
-        glVertex2f(simulation.left, simulation.top);
-        glVertex2f(simulation.right, simulation.top);
-
-        glVertex2f(simulation.left, simulation.top);
-        glVertex2f(simulation.left, simulation.bottom);
-
-        glVertex2f(simulation.right, simulation.top);
-        glVertex2f(simulation.right, simulation.bottom);
-
-        glVertex2f(simulation.left, simulation.bottom);
-        glVertex2f(simulation.right, simulation.bottom);
-
-        glEnd();*/
+        if (DISPLAY_TREE) simulation.tree.displayLines();
        
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -292,8 +269,6 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
 
-        
-        
         //glDeleteBuffers(1, &vbo);
 
         //glDeleteVertexArrays(1, &vao);

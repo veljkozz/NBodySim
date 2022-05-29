@@ -1,5 +1,67 @@
 #pragma once
 
+struct Vector
+{
+	float pt[2];
+	float& x = pt[0];
+	float& y = pt[1];
+	Vector(float x, float y) { this->x = x; this->y = y; }
+	Vector() { x = 0; y = 0; }
+	Vector(const Vector& v) { x = v.x; y = v.y; }
+	const Vector& operator=(const Vector& v) { x = v.x; y = v.y; return *this; }
+	float magSquared() {
+		return x * x + y * y;
+	}
+
+	operator float* () { return pt; }
+};
+
+float distSquared(float* a, float* b) {
+	return (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]);
+}
+
+float dist(float* a, float* b)
+{
+	return sqrt(distSquared(a, b));
+}
+
+float add(float* a, float* b) {
+	return (a[0] + b[0], a[1] + b[1]);
+}
+
+Vector sub(float* a, float* b) {
+	return Vector(a[0] - b[0], a[1] - b[1]);
+}
+
+Vector mult(float* a, float scalar) {
+	return Vector(a[0] * scalar, a[1] * scalar);
+}
+
+// Id Studios
+float invSqrt(float number)
+{
+	long i;
+	float x2, y;
+	const float threehalfs = 1.5F;
+
+	x2 = number * 0.5F;
+	y = number;
+	i = *(long*)&y;                       // evil floating point bit level hacking
+	i = 0x5f3759df - (i >> 1);               // what the fuck? 
+	y = *(float*)&i;
+	y = y * (threehalfs - (x2 * y * y));   // 1st iteration
+//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+
+	return y;
+}
+
+Vector normalize(float* a) {
+	return mult(a, invSqrt(Vector(a[0], a[1]).magSquared()));
+}
+
+
+
+// NOTE: DELETE THIS
 class vec2 {
 	float buff[2];
 public:
