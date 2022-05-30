@@ -256,12 +256,12 @@ int main(void)
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
                 std::cout << "Time for 1 iteration:" << duration.count() / 1000 << " milliseconds " << std::endl;
-                std::cout << "NumCalcs: " << simulation.numCalcs << std::endl;
+                std::cout << "NumCalcs: " << simulation.getNumCalcs() << std::endl;
             }
             cnt = 0;
         }
 
-        if (DISPLAY_TREE) simulation.tree.displayLines();
+        if (DISPLAY_TREE) simulation.displayLines();
        
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

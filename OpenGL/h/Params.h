@@ -4,3 +4,4 @@
 #define DISPLAY_TREE false
 #define BRUTEFORCE false
 #define DISPLAY_TIMES false
+#define THETA 0.5

@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\NBodySeq.cpp" />
+    <ClCompile Include="src\QuadTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\File.cu" />
@@ -161,6 +162,7 @@
   <ItemGroup>
     <ClInclude Include="h\NBodySeq.h" />
     <ClInclude Include="h\Params.h" />
+    <ClInclude Include="h\QuadTree.h" />
     <ClInclude Include="h\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

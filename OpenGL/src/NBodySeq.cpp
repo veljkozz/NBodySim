@@ -1,11 +1,10 @@
 #include "NBodySeq.h"
-#include <GL/glew.h>
 #include <chrono>
 #include <iostream> 
 #include "Params.h"
 #include "utils.h"
 
-NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles)
+NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles), tree(this)
 {
 	positions = new float[2 * numParticles];
 	velocities = new float[2 * numParticles];
@@ -16,149 +15,13 @@ NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles)
 	{
 		float angle = distributionPI(generator); // (0, TWO_PI);
 		float dist = distribution(generator);
-		float mag = 0;// dist * 0.002;
+		float mag = 0.001;// dist * 0.002;
 
 		positions[i * 2] = dist * cos(angle);
 		positions[i * 2 + 1] = dist * sin(angle);
 		velocities[i * 2] = mag * cos(angle + PI / 2);
 		velocities[i * 2 + 1] = mag * sin(angle - PI / 2);
 	}
-}
-
-
-void NBodySeq::QuadTree::insert(Node & n)
-{
-	if (root)
-		insertRecursive(root, n);
-	else root = new Node(n);
-}
-
-void NBodySeq::QuadTree::insertRecursive(Node* t, Node& n)
-{
-	if (!t->leaf)
-	{
-		insertRecursiveChoice(t, n);
-	}
-	else
-	{
-		Node tn = Node(*t);
-		insertRecursiveChoice(t, n);
-		insertRecursiveChoice(t, tn);
-		t->leaf = false;
-	}
-	updateMass(t);
-}
-
-
-void NBodySeq::QuadTree::insertRecursiveChoice(Node* t, Node n)
-{
-	float midx = (t->left + t->right) / 2.f;
-	float midy = (t->top + t->bottom) / 2.f;
-	if (n.pos[0] < midx && n.pos[1] > midy)
-	{
-		n.left = t->left; n.right = midx; n.top = t->top; n.bottom = midy;
-		if (t->nw) insertRecursive(t->nw, n);
-		else t->nw = new Node(n);
-	}
-	else if (n.pos[0] > midx && n.pos[1] > midy)
-	{
-		n.left = midx; n.right = t->right; n.top = t->top; n.bottom = midy;
-		if (t->ne) insertRecursive(t->ne, n);
-		else t->ne = new Node(n);
-	}
-	else if (n.pos[0] < midx && n.pos[1] < midy)
-	{
-		n.left = t->left; n.right = midx; n.top = midy; n.bottom = t->bottom;
-		if (t->sw) insertRecursive(t->sw, n);
-		else t->sw = new Node(n);
-	}
-	else if (n.pos[0] > midx && n.pos[1] < midy)
-	{
-		n.left = midx; n.right = t->right; n.top = midy; n.bottom = t->bottom;
-		if (t->se) insertRecursive(t->se, n);
-		else t->se = new Node(n);
-	}
-}
-
-
-void NBodySeq::QuadTree::updateParentChild(Node* parent, Node* child)
-{
-	parent->mass += child->mass;
-	parent->pos[0] += child->mass * child->pos[0];
-	parent->pos[1] += child->mass * child->pos[1];
-}
-
-void NBodySeq::QuadTree::updateMass(Node* t)
-{
-	t->mass = 0;
-	t->pos[0] = t->pos[1] = 0;
-	if (t->nw) updateParentChild(t, t->nw);
-	if (t->ne) updateParentChild(t, t->ne);
-	if (t->sw) updateParentChild(t, t->sw);
-	if (t->se) updateParentChild(t, t->se);
-	t->pos[0] /= t->mass;
-	t->pos[1] /= t->mass;
-}
-
-void NBodySeq::QuadTree::displayLinesRecursive(Node* root)
-{
-	if (root)
-	{
-		glVertex2f(root->left, root->top);
-		glVertex2f(root->right, root->top);
-
-		glVertex2f(root->left, root->top);
-		glVertex2f(root->left, root->bottom);
-
-		glVertex2f(root->right, root->top);
-		glVertex2f(root->right, root->bottom);
-
-		glVertex2f(root->left, root->bottom);
-		glVertex2f(root->right, root->bottom);
-
-		displayLinesRecursive(root->nw);
-		displayLinesRecursive(root->ne);
-		displayLinesRecursive(root->sw);
-		displayLinesRecursive(root->se);
-	}
-}
-
-
-void NBodySeq::QuadTree::displayLines() {
-	if (root != 0)
-	{
-		glBegin(GL_LINES);
-
-		displayLinesRecursive(root);
-
-		glEnd();
-	}
-
-}
-
-
-void NBodySeq::QuadTree::clear()
-{
-	deleteRecursive(root);
-	root = 0;
-}
-
-
-void NBodySeq::QuadTree::deleteRecursive(Node* t)
-{
-	if (t == 0) return;
-	else {
-		deleteRecursive(t->nw);
-		deleteRecursive(t->ne);
-		deleteRecursive(t->sw);
-		deleteRecursive(t->se);
-		delete t;
-		t = 0;
-	}
-}
-
-NBodySeq::QuadTree::~QuadTree() {
-	clear();
 }
 
 
@@ -182,13 +45,13 @@ void NBodySeq::buildQuadTree() {
 	}
 
 	tree.clear();
-	Node n(positions[0], positions[1], 0);
+	QuadTree::Node n(positions[0], positions[1], 0);
 	n.left = left; n.right = right; n.bottom = bottom; n.top = top;
 	tree.insert(n);
-	tree.root->left = left; tree.root->right = right; tree.root->top = top; tree.root->bottom = bottom;
+	//tree.root->left = left; tree.root->right = right; tree.root->top = top; tree.root->bottom = bottom;
 	for (int i = 1; i < numParticles; i++)
 	{
-		Node node(positions[i * 2], positions[i * 2 + 1], i);
+		QuadTree::Node node(positions[i * 2], positions[i * 2 + 1], i);
 		tree.insert(node);
 	}
 
@@ -233,8 +96,6 @@ void NBodySeq::runBruteForce() {
 
 void NBodySeq::runBarnesHut()
 {
-	numCalcs = 0;
-
 	auto start = std::chrono::high_resolution_clock::now();
 
 	buildQuadTree();
@@ -250,7 +111,7 @@ void NBodySeq::runBarnesHut()
 	}
 	start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < numParticles; ++i) {
-		calcForceRecursive(tree.root, i);
+		tree.forceCalculations(i);
 
 		// Add black hole in centre?
 		float centerPos[2] = { 0.f, 0.f };
@@ -278,22 +139,21 @@ void NBodySeq::runBarnesHut()
 
 }
 
-void NBodySeq::calcForce(Node* t, int i)
+void QuadTree::calcForce(Node* t, int i)
 {
-	float dSq = distSquared(&positions[i * 2], &positions[t->id * 2]);
+	float dSq = distSquared(&sim->positions[i * 2], &sim->positions[t->id * 2]);
 	Vector acc;
-	if (dSq <= 4 * r * r) {
+	if (dSq <= 4 * sim->r * sim->r) {
 		acc = Vector(0, 0);
 	}
-	//  PAZI STA JE MASA OVDE
-	else acc = mult(sub(&positions[i * 2], &positions[t->id * 2]), dt * G * t->mass / (dSq * sqrt(dSq) + 2));
+	else acc = mult(sub(&sim->positions[i * 2], &sim->positions[t->id * 2]), sim->dt * sim->G * t->mass / (dSq * sqrt(dSq) + 2));
 
-	velocities[i * 2] -= acc.x;
-	velocities[i * 2 + 1] -= acc.y;
+	sim->velocities[i * 2] -= acc.x;
+	sim->velocities[i * 2 + 1] -= acc.y;
 	numCalcs++;
 }
 
-void NBodySeq::calcForceRecursive(Node* t, int i)
+void QuadTree::calcForceRecursive(Node* t, int i)
 {
 	if (t == 0) return;
 	if (t->leaf && t->id != i)
@@ -302,9 +162,9 @@ void NBodySeq::calcForceRecursive(Node* t, int i)
 	}
 	else {
 		float s = t->right - t->left;
-		float d = dist(&positions[i], t->pos);
+		float d = dist(&sim->positions[i], t->pos);
 		// if s/d < theta then treat this as a single body
-		if (s / d < theta)
+		if (s / d < sim->theta)
 		{
 			calcForce(t, i);
 		}
