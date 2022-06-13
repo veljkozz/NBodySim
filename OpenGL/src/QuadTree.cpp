@@ -1,6 +1,8 @@
 #include "QuadTree.h"
 
 #include <GL/glew.h>
+#include "NBodySeq.h"
+#include "utils.h"
 
 void QuadTree::insert(Node& n)
 {
@@ -139,7 +141,62 @@ void QuadTree::deleteRecursive(Node* t)
 	}
 }
 
+
+
 QuadTree::~QuadTree() {
 	clear();
 }
 
+void QuadTree::calcForce(Node* t, int i)
+{
+	float dSq = distSquared(&sim->positions[i * 2], &sim->positions[t->id * 2]);
+	Vector acc;
+	if (dSq <= 4 * sim->r * sim->r) {
+		acc = Vector(0, 0);
+	}
+	else acc = mult(sub(&sim->positions[i * 2], &sim->positions[t->id * 2]), sim->dt * sim->G * t->mass / (dSq * sqrt(dSq) + 2));
+
+	sim->velocities[i * 2] -= acc.x;
+	sim->velocities[i * 2 + 1] -= acc.y;
+	numCalcs++;
+}
+
+void QuadTree::calcForceRecursive(Node* t, int i)
+{
+	if (t == 0) return;
+	if (t->leaf)
+	{
+		if(t->id != i) calcForce(t, i);
+	}
+	else {
+		float s = t->right - t->left;
+		float d = dist(&sim->positions[i], t->pos);
+		// if s/d < theta then treat this as a single body
+		if (s / d < sim->theta)
+		{
+			calcForce(t, i);
+		}
+		else {
+			calcForceRecursive(t->nw, i);
+			calcForceRecursive(t->ne, i);
+			calcForceRecursive(t->sw, i);
+			calcForceRecursive(t->se, i);
+		}
+	}
+}
+
+
+int QuadTree::getNumNodes()
+{
+	if (numNodes == 0)
+		getNumNodesRecursive(root);
+	return numNodes;
+}
+void QuadTree::getNumNodesRecursive(Node* t)
+{
+	numNodes++;
+	if (t->nw) getNumNodesRecursive(t->nw);
+	if (t->ne) getNumNodesRecursive(t->ne);
+	if (t->sw) getNumNodesRecursive(t->sw);
+	if (t->se) getNumNodesRecursive(t->se);
+}

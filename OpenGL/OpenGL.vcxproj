@@ -152,14 +152,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\BarnesHutCUDA.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\NBodySeq.cpp" />
     <ClCompile Include="src\QuadTree.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\File.cu" />
+    <CudaCompile Include="src\kernels.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="h\BarnesHutCUDA.h" />
+    <ClInclude Include="h\kernels.cuh" />
     <ClInclude Include="h\NBodySeq.h" />
     <ClInclude Include="h\Params.h" />
     <ClInclude Include="h\QuadTree.h" />

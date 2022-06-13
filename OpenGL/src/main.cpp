@@ -134,7 +134,7 @@ void displayFPS(int frameCount) {
     std::cout << "\r" << "FPS: " << frameCount;
 }
 
-int main(void)
+int main2(void)
 {
     GLFWwindow* window;
 
@@ -170,7 +170,7 @@ int main(void)
 
     GLuint vao;
     GLuint vbo;
-    const float* vertices = simulation.getPositions();
+    const float* vertices = simulation.getDrawPositions();
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -256,7 +256,7 @@ int main(void)
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
                 std::cout << "Time for 1 iteration:" << duration.count() / 1000 << " milliseconds " << std::endl;
-                std::cout << "NumCalcs: " << simulation.getNumCalcs() << std::endl;
+                std::cout << "NumCalcs: " << simulation.getNumCalcs() << " Num Nodes: " << simulation.getNumNodes() << std::endl;
             }
             cnt = 0;
         }

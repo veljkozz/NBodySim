@@ -1,27 +1,28 @@
 #pragma once
 
 #include <random>
-#include "QuadTree.h"
 #include "Params.h"
-#define PI 3.14159265359
-
+class QuadTree;
 class NBodySeq
 {
 public:
+	SimulationType simType = DISK_MODEL;
 	// Simulation parameters
-	const float bound = 15.f, lowbound = 3.f;
+	const float bound = 18.f, lowbound = 2.5f;
 
 	float r = 0.8; // Radius
-	const float mass = 1;
-	float G = 0.00001;
+	float G = 0.0000001;
 	float theta = THETA;
 	float dt = 1; // Timestep
 public:
 	int numParticles;
 	float* positions;
 	float* velocities;
+	float* mass;
 	NBodySeq(int numParticles);
 	
+	void diskModel();
+
 	void buildQuadTree();
 	// Brute force implementation
 	void runBruteForce();
@@ -31,16 +32,14 @@ public:
 	~NBodySeq() {
 		delete[] positions;
 		delete[] velocities;
+		delete[] mass;
+		delete tree;
 	}
 
-	void displayLines() { tree.displayLines(); }
-	int getNumCalcs() { return tree.getNumCalcs(); }
-	const float* getPositions() { return positions; }
+	void displayLines();
+	int getNumCalcs();
+	int getNumNodes();
+	const float* getDrawPositions() { return positions; }
 private:
-	QuadTree tree;
-	std::default_random_engine generator;
-	std::uniform_real_distribution<double> distribution;
-
-	
-	
+	QuadTree* tree;
 };

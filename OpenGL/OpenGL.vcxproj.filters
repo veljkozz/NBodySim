@@ -24,9 +24,16 @@
     <ClCompile Include="src\QuadTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BarnesHutCUDA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\File.cu" />
+    <CudaCompile Include="src\kernels.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="h\NBodySeq.h">
@@ -41,5 +48,9 @@
     <ClInclude Include="h\QuadTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="h\BarnesHutCUDA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="h\kernels.cuh" />
   </ItemGroup>
 </Project>

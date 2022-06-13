@@ -2,28 +2,85 @@
 #include <chrono>
 #include <iostream> 
 #include "Params.h"
+
+#include "Quadtree.h"
 #include "utils.h"
 
-NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles), tree(this)
+NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles)
 {
 	positions = new float[2 * numParticles];
 	velocities = new float[2 * numParticles];
+	mass = new float[numParticles];
+	tree = new QuadTree(this);
 
-	distribution = std::uniform_real_distribution<double>(lowbound, bound);
-	std::uniform_real_distribution<double> distributionPI(0, 2 * PI);
-	for (int i = 0; i < numParticles; i++)
-	{
-		float angle = distributionPI(generator); // (0, TWO_PI);
-		float dist = distribution(generator);
-		float mag = 0.001;// dist * 0.002;
+	if (simType == DISK_MODEL)
+		diskModel();
+	else {
+		// My random model
+		std::default_random_engine generator;
+		std::uniform_real_distribution<double> distribution;
+		distribution = std::uniform_real_distribution<double>(lowbound, bound);
+		std::uniform_real_distribution<double> distributionPI(0, 2 * PI);
+		for (int i = 0; i < numParticles; i++)
+		{
+			float angle = distributionPI(generator); // (0, TWO_PI);
+			float dist = distribution(generator);
+			float mag = 0.001;// dist * 0.002;
 
-		positions[i * 2] = dist * cos(angle);
-		positions[i * 2 + 1] = dist * sin(angle);
-		velocities[i * 2] = mag * cos(angle + PI / 2);
-		velocities[i * 2 + 1] = mag * sin(angle - PI / 2);
+			positions[i * 2] = dist * cos(angle);
+			positions[i * 2 + 1] = dist * sin(angle);
+			velocities[i * 2] = mag * cos(angle + PI / 2);
+			velocities[i * 2 + 1] = mag * sin(angle - PI / 2);
+			mass[i] = 1;
+		}
 	}
 }
 
+
+void NBodySeq::diskModel()
+{
+	float a = 1.0;
+	float pi = 3.14159265;
+	std::default_random_engine generator;
+	std::uniform_real_distribution<float> distribution(lowbound, bound);
+	std::uniform_real_distribution<float> distribution_theta(0.0, 2 * pi);
+
+	// loop through all particles
+	for (int i = 0; i < numParticles; i++) {
+		float theta = distribution_theta(generator);
+		float r = distribution(generator);
+
+		// set mass and position of particle
+		if (i == 0) {
+			mass[i] = 100000;
+			positions[i*2] = 0;
+			positions[i*2 + 1] = 0;
+		}
+		else {
+			mass[i] = 1.0;
+			positions[i * 2] = r * cos(theta);
+			positions[i * 2 + 1] = r * sin(theta);
+		}
+
+
+		// set velocity of particle
+		float rotation = 1;  // 1: clockwise   -1: counter-clockwise 
+		float v = 1.0 * sqrt(G * 100000.0 / r);
+		if (i == 0) {
+			velocities[0] = 0;
+			velocities[1] = 0;
+		}
+		else {
+			velocities[i*2] = rotation * v * sin(theta);
+			velocities[i*2 + 1] = -rotation * v * cos(theta);
+		}
+
+		// set acceleration to zero
+		//x_acc[i] = 0.0;
+		//y_acc[i] = 0.0;
+	}
+
+}
 
 void NBodySeq::buildQuadTree() {
 	float left, right, top, bottom;
@@ -44,15 +101,17 @@ void NBodySeq::buildQuadTree() {
 		right = left + (top - bottom);
 	}
 
-	tree.clear();
+	tree->clear();
 	QuadTree::Node n(positions[0], positions[1], 0);
 	n.left = left; n.right = right; n.bottom = bottom; n.top = top;
-	tree.insert(n);
-	//tree.root->left = left; tree.root->right = right; tree.root->top = top; tree.root->bottom = bottom;
+	n.mass = mass[0];
+	tree->insert(n);
+	//tree->root->left = left; tree->root->right = right; tree->root->top = top; tree->root->bottom = bottom;
 	for (int i = 1; i < numParticles; i++)
 	{
 		QuadTree::Node node(positions[i * 2], positions[i * 2 + 1], i);
-		tree.insert(node);
+		node.mass = mass[i];
+		tree->insert(node);
 	}
 
 }
@@ -72,12 +131,12 @@ void NBodySeq::runBruteForce() {
 				if (dSq <= 4 * r * r) {
 					acc = Vector(0, 0);
 				}
-				else acc = mult(sub(&positions[i * 2], &positions[j * 2]), dt * G * mass / (dSq * sqrt(dSq) + 2));
+				else acc = mult(sub(&positions[i * 2], &positions[j * 2]), dt * G * mass[j] * mass[i] / (dSq * sqrt(dSq) + 2));
 
-				velocities[i * 2] -= acc.x;
-				velocities[i * 2 + 1] -= acc.y;
-				velocities[j * 2] += acc.x;
-				velocities[j * 2 + 1] += acc.y;
+				velocities[i * 2] -= acc.x / mass[i];
+				velocities[i * 2 + 1] -= acc.y / mass[i];
+				velocities[j * 2] += acc.x / mass[j];
+				velocities[j * 2 + 1] += acc.y / mass[j];
 			}
 		}
 		// Add black hole in centre?
@@ -87,9 +146,12 @@ void NBodySeq::runBruteForce() {
 		//acc = mult(sub(&positions[i * 2], centerPos), dt * G * mass * centerMass * dSq / (float)sqrt(dSq + 0.0001));
 		//velocities[i * 2] += acc.x;
 		//velocities[i * 2 + 1] += acc.y;
-
-		positions[i * 2] += velocities[i * 2];
-		positions[i * 2 + 1] += velocities[i * 2 + 1];
+		if (i != 0)
+		{
+			positions[i * 2] += velocities[i * 2];
+			positions[i * 2 + 1] += velocities[i * 2 + 1];
+		}
+		
 	}
 	buildQuadTree();
 }
@@ -110,19 +172,8 @@ void NBodySeq::runBarnesHut()
 
 	}
 	start = std::chrono::high_resolution_clock::now();
-	for (int i = 0; i < numParticles; ++i) {
-		tree.forceCalculations(i);
-
-		// Add black hole in centre?
-		float centerPos[2] = { 0.f, 0.f };
-		float centerMass = 100.f;
-		float dSq = distSquared(&positions[i * 2], centerPos);
-		Vector acc = mult(sub(&positions[i * 2], centerPos), dt * G * centerMass / (float)sqrt(dSq + 0.0001));
-		if (dSq <= 12.f)
-			acc = mult(acc, -1);
-		
-		//velocities[i * 2] -= acc.x;
-		//velocities[i * 2 + 1] -= acc.y;
+	for (int i = 1; i < numParticles; ++i) {
+		tree->forceCalculations(i);
 
 		positions[i * 2] += velocities[i * 2];
 		positions[i * 2 + 1] += velocities[i * 2 + 1];
@@ -139,40 +190,8 @@ void NBodySeq::runBarnesHut()
 
 }
 
-void QuadTree::calcForce(Node* t, int i)
-{
-	float dSq = distSquared(&sim->positions[i * 2], &sim->positions[t->id * 2]);
-	Vector acc;
-	if (dSq <= 4 * sim->r * sim->r) {
-		acc = Vector(0, 0);
-	}
-	else acc = mult(sub(&sim->positions[i * 2], &sim->positions[t->id * 2]), sim->dt * sim->G * t->mass / (dSq * sqrt(dSq) + 2));
 
-	sim->velocities[i * 2] -= acc.x;
-	sim->velocities[i * 2 + 1] -= acc.y;
-	numCalcs++;
-}
+void NBodySeq::displayLines() { tree->displayLines(); }
+int NBodySeq::getNumCalcs() { return tree->getNumCalcs(); }
 
-void QuadTree::calcForceRecursive(Node* t, int i)
-{
-	if (t == 0) return;
-	if (t->leaf && t->id != i)
-	{
-		calcForce(t, i);
-	}
-	else {
-		float s = t->right - t->left;
-		float d = dist(&sim->positions[i], t->pos);
-		// if s/d < theta then treat this as a single body
-		if (s / d < sim->theta)
-		{
-			calcForce(t, i);
-		}
-		else {
-			calcForceRecursive(t->nw, i);
-			calcForceRecursive(t->ne, i);
-			calcForceRecursive(t->sw, i);
-			calcForceRecursive(t->se, i);
-		}
-	}
-}
+int NBodySeq::getNumNodes() { return tree->getNumNodes(); }

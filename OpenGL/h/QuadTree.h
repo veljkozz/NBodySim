@@ -29,6 +29,7 @@ public:
 
 	int getNumCalcs() { return numCalcs; }
 	
+	int getNumNodes();
 	
 	~QuadTree();
 
@@ -36,6 +37,7 @@ private:
 	Node* root;
 	NBodySeq* sim;
 	int numCalcs;
+	int numNodes = 0;
 
 	void insertRecursive(Node* t, Node& n);
 	void insertRecursiveChoice(Node* t, Node n);
@@ -46,4 +48,5 @@ private:
 	void deleteRecursive(Node* t);
 	void calcForce(Node* t, int i);
 	void calcForceRecursive(Node* t, int i);
+	void getNumNodesRecursive(Node* t);
 };
