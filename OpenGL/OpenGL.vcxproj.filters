@@ -30,9 +30,11 @@
     <ClCompile Include="src\BarnesHutCUDA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Params.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\File.cu" />
     <CudaCompile Include="src\kernels.cu" />
   </ItemGroup>
   <ItemGroup>

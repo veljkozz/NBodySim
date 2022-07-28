@@ -1,6 +1,7 @@
 #include "NBodySeq.h"
 #include <chrono>
 #include <iostream> 
+#include <thread>
 #include "Params.h"
 
 #include "Quadtree.h"
@@ -8,32 +9,31 @@
 
 NBodySeq::NBodySeq(int numParticles) : numParticles(numParticles)
 {
+	theta = params.theta;
 	positions = new float[2 * numParticles];
 	velocities = new float[2 * numParticles];
 	mass = new float[numParticles];
 	tree = new QuadTree(this);
 
-	if (simType == DISK_MODEL)
-		diskModel();
-	else {
-		// My random model
-		std::default_random_engine generator;
-		std::uniform_real_distribution<double> distribution;
-		distribution = std::uniform_real_distribution<double>(lowbound, bound);
-		std::uniform_real_distribution<double> distributionPI(0, 2 * PI);
-		for (int i = 0; i < numParticles; i++)
-		{
-			float angle = distributionPI(generator); // (0, TWO_PI);
-			float dist = distribution(generator);
-			float mag = 0.001;// dist * 0.002;
-
-			positions[i * 2] = dist * cos(angle);
-			positions[i * 2 + 1] = dist * sin(angle);
-			velocities[i * 2] = mag * cos(angle + PI / 2);
-			velocities[i * 2 + 1] = mag * sin(angle - PI / 2);
-			mass[i] = 1;
-		}
-	}
+	diskModel();
+//	// My random model
+//	std::default_random_engine generator;
+//	std::uniform_real_distribution<double> distribution;
+//	distribution = std::uniform_real_distribution<double>(lowbound, bound);
+//	std::uniform_real_distribution<double> distributionPI(0, 2 * PI);
+//	for (int i = 0; i < numParticles; i++)
+//	{
+//		float angle = distributionPI(generator); // (0, TWO_PI);
+//		float dist = distribution(generator);
+//		float mag = 0.001;// dist * 0.002;
+//
+//		positions[i * 2] = dist * cos(angle);
+//		positions[i * 2 + 1] = dist * sin(angle);
+//		velocities[i * 2] = mag * cos(angle + PI / 2);
+//		velocities[i * 2 + 1] = mag * sin(angle - PI / 2);
+//		mass[i] = 1;
+//	}
+//}
 }
 
 
@@ -162,7 +162,7 @@ void NBodySeq::runBarnesHut()
 
 	buildQuadTree();
 
-	if (DISPLAY_TIMES)
+	if (params.display_times)
 	{
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -177,11 +177,14 @@ void NBodySeq::runBarnesHut()
 
 		positions[i * 2] += velocities[i * 2];
 		positions[i * 2 + 1] += velocities[i * 2 + 1];
+
+		using namespace std::chrono_literals;
+
 	}
 	
 
 
-	if (DISPLAY_TIMES) {
+	if (params.display_times) {
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 		std::cout << "Time for force cals:" << duration.count() / 1000 << " milliseconds " << std::endl;

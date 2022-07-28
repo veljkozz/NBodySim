@@ -1,12 +1,22 @@
 #pragma once
 
-enum SimulationType { DISK_MODEL, PLUMMER_MODEL };
 
-#define NUM_PARTICLES 1000
-#define DISPLAY_TREE false
-#define BRUTEFORCE false
-#define DISPLAY_TIMES false
-#define THETA 0.5
+struct Params {
+	bool visualize = true;
+	bool display_tree = true;
+	bool display_times = false;
+	bool display_debug = false;
+	int num_particles = 12;
+	float theta = 0.8f;
+};
+
+extern Params params;
+
+#define _RUN_CUDA false
+//#define DISPLAY_TREE true
+#define BRUTEFORCE true
 
 
-constexpr float PI = 3.14159265359;
+
+constexpr float PI = 3.1415926535;
+
