@@ -17,7 +17,7 @@ IN THE SOFTWARE.
 #define __KERNELS_H__
 
 
-const unsigned int gridSize = 512;
+const unsigned int gridSize = 4096*2;
 const unsigned int blockSize = 256;
 
 // THESE ARE MINE

@@ -2,18 +2,18 @@
 
 
 struct Params {
-	bool visualize = true;
-	bool display_tree = true;
-	bool display_times = false;
+	int numIters = 1;
+	bool visualize = false;
+	bool display_tree = false;
+	bool display_times = true;
 	bool display_debug = false;
-	int num_particles = 12;
-	float theta = 0.8f;
+	int num_particles = 500000;
+	float theta = 1.0f;
 };
 
 extern Params params;
 
 #define _RUN_CUDA false
-//#define DISPLAY_TREE true
 #define BRUTEFORCE true
 
 

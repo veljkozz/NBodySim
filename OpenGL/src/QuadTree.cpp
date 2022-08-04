@@ -1,8 +1,8 @@
 #include "QuadTree.h"
-
 #include <GL/glew.h>
 #include "NBodySeq.h"
 #include "utils.h"
+#include <cmath>
 
 void QuadTree::insert(Node& n)
 {
@@ -150,12 +150,22 @@ QuadTree::~QuadTree() {
 
 void QuadTree::calcForce(Node* t, int i)
 {
+	/*float r = distSquared(&sim->positions[i * 2], &sim->positions[t->id * 2]); +0.025;
+	r = 1 / sqrt(r);
+	float f = t->mass * r * r * r;
+	
+	Vector acc = mult(sub(&sim->positions[i * 2], &sim->positions[t->id * 2]), sim->dt * sim->G * t->mass * r * r * r);
+	//acc_x += f * dx;
+	//acc_y += f * dy;
+	*/
+	
 	float dSq = distSquared(&sim->positions[i * 2], &sim->positions[t->id * 2]);
 	Vector acc;
 	if (dSq <= 4 * sim->r * sim->r) {
 		acc = Vector(0, 0);
 	}
 	else acc = mult(sub(&sim->positions[i * 2], &sim->positions[t->id * 2]), sim->dt * sim->G * t->mass / (dSq * sqrt(dSq) + 2));
+	
 
 	sim->velocities[i * 2] -= acc.x;
 	sim->velocities[i * 2 + 1] -= acc.y;

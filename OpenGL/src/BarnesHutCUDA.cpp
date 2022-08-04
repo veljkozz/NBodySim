@@ -112,15 +112,18 @@ void BarnesHutCUDA::update()
 	IntegrateParticles(d_x, d_y, d_vx, d_vy, d_ax, d_ay, numParticles, 2, G);
 	FillOutputArray(d_x, d_y, d_output, numNodes);
 
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&elapsedTime, start, stop);
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
-
-	if (params.display_times == true) {
-		std::cout << "Timestep: " << step << "    " << "Elapsed time: " << elapsedTime << "ms" << std::endl;
+	if (params.display_times)
+	{
+		cudaEventRecord(stop, 0);
+		cudaEventSynchronize(stop);
+		cudaEventElapsedTime(&elapsedTime, start, stop);
+		cudaEventDestroy(start);
+		cudaEventDestroy(stop);
 	}
+
+	/*if (params.display_times == true) {
+		std::cout << "Timestep: " << step << "    " << "Elapsed time: " << elapsedTime << "ms" << std::endl;
+	}*/
 
 	
 

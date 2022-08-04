@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glPointSize(5.0);
+        glPointSize(1.0);
 
 
         // model, view, and projection matrices
@@ -238,11 +238,13 @@ int main(int argc, char* argv[])
     if (_RUN_CUDA) vertices = simulation_CUDA.getOutput();
     else vertices = simulation.getDrawPositions();
     /* Loop until the user closes the window or until all iterations are done */
-    int numIters = 1000;
+    
     int iter = 0;
+    float avgTime = 0;
+    auto simulationStart = std::chrono::high_resolution_clock::now();
     while (!params.visualize || !glfwWindowShouldClose(window))
     {
-        if (iter++ > numIters) break;
+        if (params.numIters > 0 && ++iter > params.numIters) break;
         // Measure speed
         //double currentTime = glfwGetTime();
         //frameCount++;
@@ -257,23 +259,24 @@ int main(int argc, char* argv[])
         //}
 
         // Run simulation
-        if (!params.display_times || ++cnt % 200 == 0)
+        if (true)
         {
             auto start = std::chrono::high_resolution_clock::now();
 
             if(BRUTEFORCE) simulation.runBruteForce();
+            else if(_RUN_CUDA) simulation_CUDA.update();
             else simulation.runBarnesHut();
             
-            if(_RUN_CUDA) simulation_CUDA.update();
+            
 
             if (params.display_times) {
                 auto stop = std::chrono::high_resolution_clock::now();
 
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-                std::cout << "Time for 1 iteration:" << duration.count() / 1000 << " milliseconds " << std::endl;
+                std::cout << "Time for iteration" << iter << ":" << duration.count() / 1000. << " milliseconds " << std::endl;
+                avgTime += duration.count() / 1000.;
                 //std::cout << "NumCalcs: " << simulation.getNumCalcs() << " Num Nodes: " << simulation.getNumNodes() << std::endl;
             }
-            cnt = 0;
         }
 
         if(_RUN_CUDA) vertices = simulation_CUDA.getOutput();
@@ -308,5 +311,9 @@ int main(int argc, char* argv[])
         glDeleteProgram(shader);
         glfwTerminate();
     }
+    auto simulationEnd = std::chrono::high_resolution_clock::now();
+    auto simulationDuration = std::chrono::duration_cast<std::chrono::microseconds>(simulationEnd - simulationStart);
+    std::cout << "Time for simulation: " << simulationDuration.count() / 1000. << " milliseconds " << std::endl;
+    std::cout << "Avg time for timestep: " << avgTime/params.numIters << " milliseconds " << std::endl;
     return 0;
 }

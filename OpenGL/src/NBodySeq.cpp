@@ -85,7 +85,7 @@ void NBodySeq::diskModel()
 void NBodySeq::buildQuadTree() {
 	float left, right, top, bottom;
 	left = right = positions[0]; top = bottom = positions[1];
-	for (int i = 1; i < numParticles; i++)
+	for (int i = 0; i < numParticles; i++)
 	{
 		left = std::min(positions[i * 2], left);
 		right = std::max(positions[i * 2], right);
@@ -139,13 +139,7 @@ void NBodySeq::runBruteForce() {
 				velocities[j * 2 + 1] += acc.y / mass[j];
 			}
 		}
-		// Add black hole in centre?
-		//float centerPos[2] = { 0.f, 0.f };
-		//float centerMass = 0.001f;
-		//dSq = distSquared(&positions[i * 2], centerPos);
-		//acc = mult(sub(&positions[i * 2], centerPos), dt * G * mass * centerMass * dSq / (float)sqrt(dSq + 0.0001));
-		//velocities[i * 2] += acc.x;
-		//velocities[i * 2 + 1] += acc.y;
+		
 		if (i != 0)
 		{
 			positions[i * 2] += velocities[i * 2];
@@ -162,7 +156,7 @@ void NBodySeq::runBarnesHut()
 
 	buildQuadTree();
 
-	if (params.display_times)
+	/*if (params.display_times)
 	{
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -171,6 +165,7 @@ void NBodySeq::runBarnesHut()
 		start = std::chrono::high_resolution_clock::now();
 
 	}
+	*/
 	start = std::chrono::high_resolution_clock::now();
 	for (int i = 1; i < numParticles; ++i) {
 		tree->forceCalculations(i);
@@ -183,12 +178,13 @@ void NBodySeq::runBarnesHut()
 	}
 	
 
-
+	/*
 	if (params.display_times) {
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 		std::cout << "Time for force cals:" << duration.count() / 1000 << " milliseconds " << std::endl;
 	}
+	*/
 	
 
 }
