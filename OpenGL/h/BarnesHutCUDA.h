@@ -80,10 +80,11 @@ public:
 	BarnesHutCUDA(int n);
 	~BarnesHutCUDA();
 
-	int getNumParticles();
+	// obrada jedne iteracije simulacije
 	void update();
-	void reset();
+	// inicijalizacija simulacije
 	void init();
+	// rezultujuce pozicije tela
 	const float* getOutput() { return h_output; }
 private:
 	void diskModel();

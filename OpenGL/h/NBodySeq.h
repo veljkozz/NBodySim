@@ -20,7 +20,7 @@ public:
 	
 	void diskModel();
 
-	void buildQuadTree();
+	
 	// Brute force implementation
 	void runBruteForce();
 	
@@ -38,5 +38,6 @@ public:
 	int getNumNodes();
 	const float* getDrawPositions() { return positions+2; }
 private:
+	void buildQuadTree();
 	QuadTree* tree;
 };

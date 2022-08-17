@@ -21,15 +21,15 @@ public:
 	
 	void insert(Node& n);
 	
-	
 	void displayLines();
+
 	void clear();
 	
 	void forceCalculations(int i);
 
-	int getNumCalcs() { return numCalcs; }
-	
 	int getNumNodes();
+
+	int getNumCalcs() { return numCalcs; }
 	
 	~QuadTree();
 

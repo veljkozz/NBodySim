@@ -152,21 +152,9 @@ void NBodySeq::runBruteForce() {
 
 void NBodySeq::runBarnesHut()
 {
-	auto start = std::chrono::high_resolution_clock::now();
 
 	buildQuadTree();
 
-	/*if (params.display_times)
-	{
-		auto stop = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-		std::cout << "Time for building quad tree:" << duration.count() / 1000 << " milliseconds " << std::endl;
-
-		start = std::chrono::high_resolution_clock::now();
-
-	}
-	*/
-	start = std::chrono::high_resolution_clock::now();
 	for (int i = 1; i < numParticles; ++i) {
 		tree->forceCalculations(i);
 
@@ -176,15 +164,6 @@ void NBodySeq::runBarnesHut()
 		using namespace std::chrono_literals;
 
 	}
-	
-
-	/*
-	if (params.display_times) {
-		auto stop = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-		std::cout << "Time for force cals:" << duration.count() / 1000 << " milliseconds " << std::endl;
-	}
-	*/
 	
 
 }

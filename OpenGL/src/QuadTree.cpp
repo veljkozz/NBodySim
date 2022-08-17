@@ -183,8 +183,6 @@ void QuadTree::calcForceRecursive(Node* t, int i)
 		float s = t->right - t->left;
 		float d = dist(&sim->positions[i], t->pos);
 		// if s/d < theta then treat this as a single body
-
-
 		if (s / d < sim->theta)
 		{
 			calcForce(t, i);
