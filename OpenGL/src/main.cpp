@@ -129,8 +129,6 @@ int main(int argc, char* argv[])
 {
     GLFWwindow* window = 0;
 
-    
-    
     if (params.visualize)
     {
         /* Initialize the library */
@@ -191,8 +189,6 @@ int main(int argc, char* argv[])
         shader = createShader(vertexSource, fragmentSource);
         glUseProgram(shader);
         
-
-
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
@@ -207,8 +203,7 @@ int main(int argc, char* argv[])
         glEnable(GL_POINT_SMOOTH);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glPointSize(1.0);
-
+        glPointSize(3.0);
 
         // model, view, and projection matrices
         glm::mat4 model = glm::mat4(1.0f);
@@ -226,16 +221,9 @@ int main(int argc, char* argv[])
     }
 
     displayDeviceProperties();
-    
-    //glfwSetMouseButtonCallback(window, mouseCallback);
-
-    int cnt = 0;
-    double previousTime = glfwGetTime();
-    int frameCount = 0;
-
 
     const float* vertices;
-    if (_RUN_CUDA) vertices = simulation_CUDA.getOutput();
+    if (params.RUN_CUDA) vertices = simulation_CUDA.getOutput();
     else vertices = simulation.getDrawPositions();
     /* Loop until the user closes the window or until all iterations are done */
     
@@ -245,29 +233,15 @@ int main(int argc, char* argv[])
     while (!params.visualize || !glfwWindowShouldClose(window))
     {
         if (params.numIters > 0 && ++iter > params.numIters) break;
-        // Measure speed
-        //double currentTime = glfwGetTime();
-        //frameCount++;
-        //// If a second has passed.
-        //if (currentTime - previousTime >= 1)
-        //{
-        //    // Display the frame count here any way you want.
-        //    //displayFPS(frameCount);
-
-        //    frameCount = 0;
-        //    previousTime = currentTime;
-        //}
 
         // Run simulation
         if (true)
         {
             auto start = std::chrono::high_resolution_clock::now();
 
-            if(BRUTEFORCE) simulation.runBruteForce();
-            else if(_RUN_CUDA) simulation_CUDA.update();
-            else simulation.runBarnesHut();
-            
-            
+            if (params.RUN_CUDA) simulation_CUDA.update();
+            else if (params.BRUTEFORCE) simulation.runBruteForce();
+            else if (params.BARNES_HUT) simulation.runBarnesHut();
 
             if (params.display_times) {
                 auto stop = std::chrono::high_resolution_clock::now();
@@ -275,11 +249,10 @@ int main(int argc, char* argv[])
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
                 std::cout << "Time for iteration" << iter << ":" << duration.count() / 1000. << " milliseconds " << std::endl;
                 avgTime += duration.count() / 1000.;
-                //std::cout << "NumCalcs: " << simulation.getNumCalcs() << " Num Nodes: " << simulation.getNumNodes() << std::endl;
             }
         }
 
-        if(_RUN_CUDA) vertices = simulation_CUDA.getOutput();
+        if(params.RUN_CUDA) vertices = simulation_CUDA.getOutput();
 
         if (params.visualize)
         {
@@ -311,9 +284,12 @@ int main(int argc, char* argv[])
         glDeleteProgram(shader);
         glfwTerminate();
     }
-    auto simulationEnd = std::chrono::high_resolution_clock::now();
-    auto simulationDuration = std::chrono::duration_cast<std::chrono::microseconds>(simulationEnd - simulationStart);
-    std::cout << "Time for simulation: " << simulationDuration.count() / 1000. << " milliseconds " << std::endl;
-    std::cout << "Avg time for timestep: " << avgTime/params.numIters << " milliseconds " << std::endl;
+
+    if (params.display_times) {
+        auto simulationEnd = std::chrono::high_resolution_clock::now();
+        auto simulationDuration = std::chrono::duration_cast<std::chrono::microseconds>(simulationEnd - simulationStart);
+        std::cout << "Time for simulation: " << simulationDuration.count() / 1000. << " milliseconds " << std::endl;
+        std::cout << "Avg time for timestep: " << avgTime / params.numIters << " milliseconds " << std::endl;
+    }
     return 0;
 }

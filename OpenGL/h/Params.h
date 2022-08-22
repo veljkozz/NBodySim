@@ -2,21 +2,19 @@
 
 
 struct Params {
-	int num_particles = 100000;
-	int numIters = 10000000;
+	int num_particles = 50;
+	int numIters = 0;
 	bool visualize = true;
-	bool display_tree = false;
+	bool display_tree = true;
 	bool display_times = false;
 	bool display_debug = false;
-	float theta = 1.0f;
+	float theta = 0.5f;
+	bool RUN_CUDA = false;
+	bool BRUTEFORCE = false;
+	bool BARNES_HUT = true;
 };
 
 extern Params params;
-
-#define _RUN_CUDA true
-#define BRUTEFORCE false
-
-
 
 constexpr float PI = 3.1415926535;
 

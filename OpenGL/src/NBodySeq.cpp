@@ -62,7 +62,6 @@ void NBodySeq::diskModel()
 			positions[i * 2 + 1] = r * sin(theta);
 		}
 
-
 		// set velocity of particle
 		float rotation = 1;  // 1: clockwise   -1: counter-clockwise 
 		float v = 1.0 * sqrt(G * 100000.0 / r);
@@ -74,10 +73,6 @@ void NBodySeq::diskModel()
 			velocities[i*2] = rotation * v * sin(theta);
 			velocities[i*2 + 1] = -rotation * v * cos(theta);
 		}
-
-		// set acceleration to zero
-		//x_acc[i] = 0.0;
-		//y_acc[i] = 0.0;
 	}
 
 }
@@ -106,7 +101,7 @@ void NBodySeq::buildQuadTree() {
 	n.left = left; n.right = right; n.bottom = bottom; n.top = top;
 	n.mass = mass[0];
 	tree->insert(n);
-	//tree->root->left = left; tree->root->right = right; tree->root->top = top; tree->root->bottom = bottom;
+
 	for (int i = 1; i < numParticles; i++)
 	{
 		QuadTree::Node node(positions[i * 2], positions[i * 2 + 1], i);
